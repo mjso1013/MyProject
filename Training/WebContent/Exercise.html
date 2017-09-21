@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="/resources/demos/style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script type="text/javascript">
+    $(function(){
+      $( "#datepicker" ).datepicker();
+    });
+
+
+    function replace(){
+      if($("#textLoc").text()=='jQuery로 text 넣기'){
+        setTimeout(function(){$("#textLoc").text("123");}, 1000);
+      }else{
+
+        setTimeout(function(){$("#textLoc").text("jQuery로 text 넣기");}, 1000);
+      }
+    }
+
+  function check(){
+    alert($("#datepicker").val());
+
+
+    var arrayDate = $("#datepicker").val().split("/");
+
+    var Date = arrayDate[2] + "-" + arrayDate[0]+ "-"+ arrayDate[1];
+    alert(Date);
+  }
+
+</script>
+</head>
+<body>
+  <p id="textLoc">123</p>
+  <button onclick="return replace();" >교체</button>
+
+  <p>Date: <input type="text" id="datepicker"></p>
+  <button onclick="return check();">확인</button>
+</body>
+</html>

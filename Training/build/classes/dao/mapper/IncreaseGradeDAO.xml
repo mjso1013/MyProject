@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이 부분은 필요한 부분(dispatcher-servlet.xml과 mapping을 해주기 때문에 필요하다) -->
+<!-- ★ 어떤 인터페이스와 mapping하고 있따는 정보를 갖고 있어야 하기 떄문 ★ -->
+<mapper namespace="dao.IncreaseGradeDAO">
+  <sql id="insert_column">
+      INCREASE_NUM
+       , YEAR
+       , GRADE
+       , INCREASE_RATE
+  </sql>
+
+  <select id="findIncreaseGrade" resultType="vo.IncreaseGradeVO">
+    SELECT
+      <include refid="insert_column"/>
+    FROM INCREASE_GRADE
+    WHERE INCREASE_NUM = #{increaseNum}
+  </select>
+
+
+  <select id="getIncreaseGrades" resultType="vo.IncreaseGradeVO">
+    SELECT
+       INCREASE_NUM
+      ,YEAR
+      ,GRADE
+      ,INCREASE_RATE
+
+    FROM INCREASE_GRADE
+    ORDER BY INCREASE_NUM
+  </select>
+
+
+  <insert id="insertIncreaseGrade">
+    INSERT INTO INCREASE_GRADE
+    (
+        <include refid="insert_column"/>
+     )
+     VALUES
+     (
+         (SELECT NVL(MAX(INCREASE_NUM)+1,1) FROM INCREASE_GRADE)
+       , #{year}
+       , #{grade}
+       , #{increaseRate}
+     )
+  </insert>
+
+   <delete id="deleteIncreaseGrade">
+    DELETE INCREASE_GRADE
+
+    WHERE INCREASE_NUM=#{increaseNum}
+
+  </delete>
+
+  <update id="modifyIncreaseGrade">
+    UPDATE INCREASE_GRADE
+
+    SET
+    YEAR=#{year}
+   ,GRADE=#{grade}
+   ,INCREASE_RATE=#{increaseRate}
+
+   WHERE
+   INCREASE_NUM=#{increaseNum}
+
+  </update>
+
+</mapper>

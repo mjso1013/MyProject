@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+  <context:component-scan base-package="controllers,dao"></context:component-scan>
+
+  <!-- JDBC Driver 로드 기능을 하나로 묶음(모든 DAO에서 사용 가능하도록)
+  xml 방식에서 썻던 injection을 하는 것일 뿐이다 -->
+  <bean name="ds" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+    <property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+    <property name="username" value="TRAINING"/>
+    <property name="password" value="111111"/>
+  </bean>
+
+  <bean name="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="ds"/>
+    <!-- value에 값 앞에 classpath:들어가야 함(약속임), NoticeDAO 부분은 DAO가 여러개가 되면 *로 대체하면 된다. -->
+    <property name="mapperLocations" value="classpath:dao/mapper/*.xml"/>
+    <property name="configLocation"  value="classpath:mybatis-config.xml"/>
+  </bean>
+
+  <bean name="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+    <!-- index는 약속 -->
+    <constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+  </bean>
+</beans>

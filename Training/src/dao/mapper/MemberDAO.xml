@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이 부분은 필요한 부분(dispatcher-servlet.xml과 mapping을 해주기 때문에 필요하다) -->
+<!-- ★ 어떤 인터페이스와 mapping하고 있따는 정보를 갖고 있어야 하기 떄문 ★ -->
+<mapper namespace="dao.MemberDAO">
+  <sql id="insert_column">
+      ID_NUM
+      ,NAME
+      ,POSITION
+      ,BOSS_NUM
+      ,JOINDATE
+      ,SALARY
+      ,COMMISSION
+      ,DEPT_NUM
+  </sql>
+
+  <select id="findMember" resultType="vo.MemberVO">
+
+  SELECT
+    <include refid="insert_column"/>
+  FROM MEMBER
+
+  WHERE ID_NUM=#{idNum}
+
+  </select>
+
+<!-- 회원 전체 조회 부분 -->
+
+  <resultMap id="increaseGradeMapper" type="vo.IncreaseGradeVO">
+    <result property="increaseNum" column="INCREASE_NUM"/>
+    <result property="year" column="YEAR"/>
+    <result property="GRADE" column="GRADE"/>
+    <result property="increaseRate" column="INCREASE_RATE"/>
+  </resultMap>
+
+  <resultMap id="ResultMapper" type="vo.ResultVO">
+    <result property="resultNum" column="RESULT_NUM"/>
+    <result property="year" column="YEAR"/>
+    <result property="idNum" column="ID_NUM"/>
+    <result property="grade" column="GRADE"/>
+  </resultMap>
+
+ <resultMap id="MemberMapper" type="vo.MemberVO">
+  <result property="idNum" column="ID_NUM" />
+  <result property="name" column="NAME" />
+  <result property="position" column="POSITION" />
+  <result property="bossNum" column="BOSS_NUM" />
+  <result property="joinDate" column="JOINDATE" />
+  <result property="salary" column="SALARY" />
+  <result property="commission" column="COMMISSION" />
+  <result property="deptNum" column="DEPT_NUM" />
+
+ </resultMap>
+
+  <!-- 전체 인상 평균 리스트-->
+  <select id="avgIncreaseRate" resultMap="increaseGradeMapper">
+    SELECT ROUND(AVG(INCREASE_RATE),0) AS AVG_INCREASE_RATE
+    FROM INCREASE_GRADE I
+    INNER JOIN RESULT R
+    ON I.YEAR=R.YEAR AND I.GRADE = R.GRADE
+    GROUP BY R.ID_NUM
+    ORDER BY R.ID_NUM
+  </select>
+
+  <!-- 전체 인상 평균의 평균 -->
+  <select id="avgIncreaseRateAvg" resultType="Integer">
+      WITH A AS(
+
+      SELECT AVG(INCREASE_RATE) AS AVG_INCREASE_RATE
+      FROM INCREASE_GRADE I INNER JOIN RESULT R
+      ON I.YEAR=R.YEAR AND I.GRADE = R.GRADE
+      GROUP BY R.ID_NUM
+      ORDER BY R.ID_NUM)
+
+      SELECT ROUND(AVG(A.AVG_INCREASE_RATE),0) FROM A
+  </select>
+
+  <!-- 평균 등급 -->
+  <select id="avgGrade" resultMap="ResultMapper">
+  <![CDATA[
+    SELECT
+            CASE WHEN ROUND(AVG(SCORE),1) = 1 THEN 'A'
+                 WHEN ROUND(AVG(SCORE),1) >= 0.75 AND ROUND(AVG(SCORE),1)< 1 THEN 'B'
+                 WHEN ROUND(AVG(SCORE),1) >= 0.5 AND ROUND(AVG(SCORE),1)< 0.75 THEN 'C'
+                 ELSE 'D'
+            END AS AVG_GRADE
+    FROM (
+        SELECT GRADE , ID_NUM ,
+                CASE WHEN GRADE='A' THEN 1
+                     WHEN GRADE='B' THEN 0.75
+                     WHEN GRADE='C' THEN 0.5
+                     WHEN GRADE='D' THEN 0.25
+                 END AS SCORE
+        FROM RESULT)
+  GROUP BY ID_NUM
+  ORDER BY ID_NUM
+  ]]>
+  </select>
+
+    <!-- 평균 등급 평균 -->
+  <select id="avgGradeAvg" resultType="String">
+  <![CDATA[
+   WITH A AS(
+  SELECT
+          CASE WHEN ROUND(AVG(SCORE),1) = 1 THEN 'A'
+               WHEN ROUND(AVG(SCORE),1) >= 0.75 AND ROUND(AVG(SCORE),1)< 1 THEN 'B'
+               WHEN ROUND(AVG(SCORE),1) >= 0.5 AND ROUND(AVG(SCORE),1)< 0.75 THEN 'C'
+               ELSE 'D'
+          END AS AVG_GRADE
+      FROM (
+          SELECT GRADE , ID_NUM ,
+                  CASE WHEN GRADE='A' THEN 1
+                       WHEN GRADE='B' THEN 0.75
+                       WHEN GRADE='C' THEN 0.5
+                       WHEN GRADE='D' THEN 0.25
+                  END AS SCORE
+         FROM RESULT)
+  GROUP BY ID_NUM
+  )
+
+  SELECT
+          CASE WHEN ROUND(AVG(B.AVG_GRADE_SCORE),1)=1 THEN 'A'
+               WHEN ROUND(AVG(B.AVG_GRADE_SCORE),1)>=0.75 AND ROUND(AVG(B.AVG_GRADE_SCORE),1) < 1 THEN 'B'
+               WHEN ROUND(AVG(B.AVG_GRADE_SCORE),1)>=0.5 AND ROUND(AVG(B.AVG_GRADE_SCORE),1) < 0.75 THEN 'C'
+              ELSE 'D'
+              END AS AVG_GRADE_AVG
+  FROM
+      (SELECT A.AVG_GRADE,
+          CASE WHEN A.AVG_GRADE ='A' THEN 1
+               WHEN A.AVG_GRADE ='B' THEN 0.75
+               WHEN A.AVG_GRADE ='C' THEN 0.5
+               WHEN A.AVG_GRADE ='D' THEN 0.25
+               END AS AVG_GRADE_SCORE
+      FROM A) B
+  ]]>
+  </select>
+
+  <!-- 전체 급여 평균 -->
+  <select id="salAvg" resultType="Integer">
+    SELECT ROUND(AVG(SALARY),0) FROM MEMBER
+  </select>
+
+  <!-- 전체 커미션 평균 -->
+    <select id="commissionAvg" resultType="Integer">
+    SELECT ROUND(AVG(COMMISSION),0) FROM MEMBER
+  </select>
+
+  <!-- 급여 총 인상액 -->
+  <select id="increaseSal" resultMap="MemberMapper">
+    <![CDATA[
+     SELECT ROUND(F.SALARY-(F.LAST_SAL/(1+0.01*F.INCREASE_RATE)),0) AS INCREASE_SAL
+      FROM
+      (
+      SELECT L.ID_NUM, L.SALARY, L.SALARY/(1+0.01*L.INCREASE_RATE) LAST_SAL, II.INCREASE_RATE
+          FROM
+          (
+            SELECT M.ID_NUM, M.SALARY, R.GRADE , I.INCREASE_RATE
+                FROM MEMBER M INNER JOIN RESULT R
+                ON M.ID_NUM=R.ID_NUM
+                    INNER JOIN INCREASE_GRADE I
+                    ON I.GRADE=R.GRADE AND I.YEAR=R.YEAR
+                    WHERE I.YEAR = 2016
+          ) L INNER JOIN RESULT RR
+          ON RR.ID_NUM=L.ID_NUM
+          INNER JOIN INCREASE_GRADE II
+          ON II.GRADE = RR.GRADE AND II.YEAR=RR.YEAR
+          WHERE II.YEAR=2015
+      ) F
+     ORDER BY ID_NUM
+    ]]>
+  </select>
+
+  <!-- 급여 총 인상액 평균 -->
+  <select id="increaseSalAvg" resultType="Integer">
+  <![CDATA[
+    WITH A AS
+    (SELECT ROUND(F.SALARY-(F.LAST_SAL/(1+0.01*F.INCREASE_RATE)),0) AS INCREASE_SAL
+        FROM
+        (
+        SELECT L.ID_NUM, L.SALARY, L.SALARY/(1+0.01*L.INCREASE_RATE) LAST_SAL, II.INCREASE_RATE
+            FROM
+            (
+              SELECT M.ID_NUM, M.SALARY, R.GRADE , I.INCREASE_RATE
+                  FROM MEMBER M INNER JOIN RESULT R
+                  ON M.ID_NUM=R.ID_NUM
+                      INNER JOIN INCREASE_GRADE I
+                      ON I.GRADE=R.GRADE AND I.YEAR=R.YEAR
+                      WHERE I.YEAR = 2016
+            ) L INNER JOIN RESULT RR
+            ON RR.ID_NUM=L.ID_NUM
+            INNER JOIN INCREASE_GRADE II
+            ON II.GRADE = RR.GRADE AND II.YEAR=RR.YEAR
+            WHERE II.YEAR=2015
+        ) F
+    )
+    SELECT ROUND(AVG(A.INCREASE_SAL),0) FROM A
+   ]]>
+  </select>
+
+
+
+ <select id="getMembers" resultType="vo.MemberVO">
+      SELECT
+
+      A.ID_NUM
+     ,A.NAME
+     ,A.POSITION
+     ,A.BOSS_NUM
+     ,B.NAME BOSS
+     ,A.JOINDATE
+     ,A.SALARY
+     ,A.COMMISSION
+     ,D.DEPT_NAME
+     ,A.DEPT_NUM
+
+     FROM MEMBER A
+
+     LEFT OUTER JOIN MEMBER B
+     ON A.BOSS_NUM=B.ID_NUM
+
+     INNER JOIN DEPARTMENT D
+     ON D.DEPT_NUM=A.DEPT_NUM
+
+
+     ORDER BY ID_NUM
+
+
+ </select>
+
+
+
+  <insert id="insertMember">
+    INSERT INTO MEMBER
+    (
+        <include refid="insert_column"/>
+     )
+     VALUES
+     (
+         (SELECT NVL(MAX(ID_NUM)+1,1) FROM MEMBER)
+       , #{name}
+       , #{position}
+       , #{bossNum}
+       , #{joinDate}
+       , #{salary}
+       , #{commission}
+       , #{deptNum}
+     )
+  </insert>
+
+  <delete id="deleteMember">
+    DELETE MEMBER
+
+    WHERE ID_NUM=#{idNum}
+
+  </delete>
+
+  <update id="modifyMember">
+    UPDATE MEMBER
+
+    SET
+    NAME=#{name}
+   ,POSITION=#{position}
+   ,BOSS_NUM=#{bossNum}
+   ,JOINDATE=#{joinDate}
+   ,SALARY=#{salary}
+   ,COMMISSION=#{commission}
+   ,DEPT_NUM=#{deptNum}
+
+    WHERE
+    ID_NUM=#{idNum}
+
+  </update>
+
+  <!-- 직급별 통계 -->
+  <select id="getPositionInfo" resultType="vo.PositionStatisticsVO">
+    SELECT
+
+     POSITION,
+     COUNT(POSITION) AS MEMBERCOUNT
+    ,MAX(SALARY) AS MAXSAL, MIN(SALARY) AS MINSAL
+    ,ROUND(AVG(SALARY),0) AS AVGSAL
+    ,SUM(SALARY) AS SUMSAL
+
+    FROM MEMBER
+    GROUP BY POSITION
+
+  </select>
+
+  <select id="getPositionList" resultType="String">
+    SELECT DISTINCT POSITION
+    FROM MEMBER
+    ORDER BY POSITION
+  </select>
+
+</mapper>

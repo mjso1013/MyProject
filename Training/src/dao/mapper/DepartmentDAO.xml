@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이 부분은 필요한 부분(dispatcher-servlet.xml과 mapping을 해주기 때문에 필요하다) -->
+<!-- ★ 어떤 인터페이스와 mapping하고 있따는 정보를 갖고 있어야 하기 떄문 ★ -->
+<mapper namespace="dao.DepartmentDAO">
+  <sql id="insert_column">
+       DEPT_NUM
+       , DEPT_NAME
+       , LOCATION
+  </sql>
+
+  <select id="findDepartment" resultType="vo.DepartmentVO">
+    SELECT
+      <include refid="insert_column"/>
+    FROM DEPARTMENT
+    WHERE DEPT_NUM = #{deptNum}
+  </select>
+
+  <select id="getDepartments" resultType="vo.DepartmentVO">
+    SELECT DEPT_NUM,DEPT_NAME,LOCATION FROM DEPARTMENT ORDER BY DEPT_NUM
+  </select>
+
+
+  <insert id="insertDepartment">
+    INSERT INTO DEPARTMENT
+    (
+        <include refid="insert_column"/>
+     )
+     VALUES
+     (
+         (SELECT NVL(MAX(DEPT_NUM)+1,1) FROM DEPARTMENT)
+       , #{deptName}
+       , #{location}
+     )
+  </insert>
+
+  <delete id="deleteDepartment">
+    DELETE DEPARTMENT
+
+    WHERE DEPT_NUM=#{deptNum}
+
+  </delete>
+
+  <update id="modifyDepartment">
+    UPDATE DEPARTMENT
+
+    SET
+    DEPT_NAME=#{deptName}
+   ,LOCATION=#{location}
+
+   WHERE
+   DEPT_NUM=#{deptNum}
+
+  </update>
+
+</mapper>
